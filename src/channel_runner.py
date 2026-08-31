@@ -153,19 +153,20 @@ class ChannelRunner:
             )
             return {"status": "failed", "error": error_msg}
 
-        # 4. Transform video with Anti-Copyright filters & dynamic styled captions
+        video_title = self.config.fixed_title or chosen_video.get("title") or "TikTok Short"
+        description = f"{video_title}\n\n{self.config.description_footer}".strip()
+
+        # 4. Transform video with Anti-Copyright filters, AI story voiceover & dynamic styled captions
         processed_file = downloaded_file.replace(".mp4", "_edited.mp4")
         from src.video_editor import apply_anti_copyright_and_captions
         final_video_path = apply_anti_copyright_and_captions(
             input_video=downloaded_file,
             output_video=processed_file,
+            title=video_title,
             enable_filter=True,
             enable_captions=True,
-            enable_audio_shift=True
+            enable_ai_voice_if_silent=True
         )
-
-        video_title = self.config.fixed_title or chosen_video.get("title") or "TikTok Short"
-        description = f"{video_title}\n\n{self.config.description_footer}".strip()
 
         if self.dry_run:
             logger.info(f"[DRY-RUN] Would upload {final_video_path} as YouTube Short:")
