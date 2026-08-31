@@ -153,12 +153,22 @@ class ChannelRunner:
             )
             return {"status": "failed", "error": error_msg}
 
-        # 4. Upload to YouTube
+        # 4. Transform video with Anti-Copyright filters & dynamic styled captions
+        processed_file = downloaded_file.replace(".mp4", "_edited.mp4")
+        from src.video_editor import apply_anti_copyright_and_captions
+        final_video_path = apply_anti_copyright_and_captions(
+            input_video=downloaded_file,
+            output_video=processed_file,
+            enable_filter=True,
+            enable_captions=True,
+            enable_audio_shift=True
+        )
+
         video_title = self.config.fixed_title or chosen_video.get("title") or "TikTok Short"
         description = f"{video_title}\n\n{self.config.description_footer}".strip()
 
         if self.dry_run:
-            logger.info(f"[DRY-RUN] Would upload {downloaded_file} as YouTube Short:")
+            logger.info(f"[DRY-RUN] Would upload {final_video_path} as YouTube Short:")
             logger.info(f"  Title: {video_title}")
             logger.info(f"  Category: {self.config.youtube_category_id}")
             logger.info(f"  Tags: {self.config.default_tags}")
@@ -167,7 +177,7 @@ class ChannelRunner:
             try:
                 uploader = self._get_uploader()
                 yt_id = uploader.upload_short(
-                    video_path=downloaded_file,
+                    video_path=final_video_path,
                     title=video_title,
                     description=description,
                     tags=self.config.default_tags,
