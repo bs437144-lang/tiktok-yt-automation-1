@@ -8,12 +8,13 @@ import yt_dlp
 
 logger = logging.getLogger("tiktok_downloader")
 
-# Format selector strictly from Section 9 Rule 1
+# Format selector prioritized for 1080p Full HD & High Bitrate with pristine audio
 FORMAT_SELECTOR = (
-    "bestvideo[format_id^=play][ext=mp4]+bestaudio/"
+    "bestvideo[ext=mp4]+bestaudio/"
+    "bestvideo+bestaudio/"
+    "bestvideo[format_id^=play]+bestaudio/"
     "best[format_id^=play][ext=mp4][vcodec!=none]/"
     "best[format_id^=play][vcodec!=none]/"
-    "best[format_id^=h264][ext=mp4][vcodec!=none]/"
     "best[ext=mp4][vcodec!=none]/"
     "best[vcodec!=none]"
 )
@@ -149,6 +150,8 @@ def download_video(video_url: str, output_dir: str = "downloads", cookiefile: Op
         opts = get_ydl_base_opts(cookiefile)
         opts.update({
             "format": FORMAT_SELECTOR,
+            "format_sort": ["res:1080", "quality", "size", "br", "fps"],
+            "merge_output_format": "mp4",
             "outtmpl": out_template,
             "overwrites": True,
         })
