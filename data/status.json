@@ -1,0 +1,58 @@
+{
+  "last_updated": "2026-08-31 04:09 PM PKT",
+  "total_channels": 1,
+  "total_uploads": 0,
+  "channels": [
+    {
+      "id": "channel_1",
+      "title": "RZR",
+      "tiktok_username": "worldlife_ai",
+      "subscribers": "97",
+      "total_views": "178428",
+      "total_videos": "81",
+      "schedule": {
+        "slot1": "04:00 PM PKT (Newest TikTok)",
+        "slot2": "09:00 PM PKT (Most-Viewed Viral)"
+      },
+      "recent_uploads": [
+        {
+          "tiktok_id": "7643540790647475470",
+          "youtube_video_id": "gYyTu_tfPDw",
+          "title": "The Lion King was my favorite childhood movie.  I remember my family ...",
+          "posted_at": "2026-08-31T22:03:00.352768+00:00",
+          "status": "uploaded",
+          "retry_count": 0,
+          "next_retry_date": "2026-08-31",
+          "view_count": 577400,
+          "duration": 61.0,
+          "slot": 1,
+          "last_error": null
+        }
+      ],
+      "recent_runs": [
+        {
+          "id": 2,
+          "channel_id": "channel_1",
+          "slot": 1,
+          "run_date": "2026-08-31",
+          "status": "success",
+          "video_id": "gYyTu_tfPDw",
+          "started_at": "2026-08-31T22:02:26.897758+00:00",
+          "finished_at": "2026-08-31T22:03:00.364422+00:00",
+          "error_message": null
+        },
+        {
+          "id": 1,
+          "channel_id": "channel_1",
+          "slot": 1,
+          "run_date": "2026-08-31",
+          "status": "no_content",
+          "video_id": null,
+          "started_at": "2026-08-31T20:48:29.087141+00:00",
+          "finished_at": "2026-08-31T20:48:43.203281+00:00",
+          "error_message": null
+        }
+      ]
+    }
+  ]
+}
