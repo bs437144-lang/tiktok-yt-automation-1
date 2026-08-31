@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.env
+venv/
+.venv/
+
+# Channel secrets & tokens (Must NEVER be committed to repo)
+credentials/
+tokens/
+cookies.txt
+*.cookies
+
+# Runner scratch & logs
+downloads/
+logs/
+*.log
+
+# SQLite WAL files (db is committed, wal/shm are temp)
+data/*.db-wal
+data/*.db-shm

@@ -1,0 +1,112 @@
+name: Upload Slot 1
+
+on:
+  schedule:
+    # 6:00 PM PKT (13:00 UTC)
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Channel ID (e.g. channel_1)'
+        required: true
+        default: 'channel_1'
+      dry_run:
+        description: 'Dry Run Mode'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: upload-${{ inputs.channel || 'channel_1' }}-slot1
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg || true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore credentials & secrets
+        env:
+          CLIENT_SECRET_B64: ${{ secrets.CHANNEL_1_CLIENT_SECRET }}
+          TOKEN_B64: ${{ secrets.CHANNEL_1_TOKEN }}
+          COOKIES_B64: ${{ secrets.TIKTOK_COOKIES }}
+          DISCORD_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
+        run: |
+          mkdir -p credentials tokens downloads logs data
+          
+          if [ -n "$CLIENT_SECRET_B64" ]; then
+            echo "$CLIENT_SECRET_B64" | base64 -d > credentials/channel_1_client_secret.json
+          fi
+          
+          if [ -n "$TOKEN_B64" ]; then
+            echo "$TOKEN_B64" | base64 -d > tokens/channel_1_token.json
+          fi
+          
+          if [ -n "$COOKIES_B64" ]; then
+            echo "$COOKIES_B64" | base64 -d > cookies.txt
+            echo "TIKTOK_COOKIES_FILE=cookies.txt" >> .env
+          fi
+          
+          echo "DISCORD_WEBHOOK_URL=$DISCORD_URL" >> .env
+          if [ "$DRY_RUN_INPUT" = "true" ]; then
+            echo "DRY_RUN=true" >> .env
+          fi
+
+      - name: Execute Slot 1 Run
+        run: |
+          python run.py --slot 1 --channel "${{ inputs.channel || 'channel_1' }}"
+
+      - name: Commit & Push DB State
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 3-attempt fetch / rebase / push loop (Section 4)
+          for i in 1 2 3; do
+            git add data/
+            if git diff --staged --quiet; then
+              echo "No database changes to commit."
+              break
+            fi
+            git commit -m "chore(db): update channel state [skip ci]" || break
+            git fetch origin main
+            git rebase origin/main || git rebase --abort
+            if git push origin main; then
+              echo "Successfully pushed DB state."
+              break
+            fi
+            sleep $((i * 3))
+          done
+
+      - name: Upload Runner Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-slot1-${{ github.run_id }}
+          path: logs/
+          retention-days: 14

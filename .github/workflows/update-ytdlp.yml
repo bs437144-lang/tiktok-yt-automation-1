@@ -1,0 +1,55 @@
+name: Update yt-dlp
+
+on:
+  schedule:
+    # Daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check latest yt-dlp version on PyPI
+        id: check_version
+        run: |
+          python -c "
+          import urllib.request, json, re
+          req = urllib.request.urlopen('https://pypi.org/pypi/yt-dlp/json')
+          data = json.loads(req.read())
+          latest = data['info']['version']
+          print(f'Latest yt-dlp: {latest}')
+          with open('requirements.txt', 'r') as f:
+              content = f.read()
+          new_content = re.sub(r'yt-dlp>=[0-9\.]+', f'yt-dlp>={latest}', content)
+          if content != new_content:
+              with open('requirements.txt', 'w') as f:
+                  f.write(new_content)
+              print('requirements.txt updated')
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+                  out.write(f'updated=true\nversion={latest}\n')
+          else:
+              print('yt-dlp is already up to date')
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+                  out.write('updated=false\n')
+          "
+
+      - name: Commit & Push Update
+        if: steps.check_version.outputs.updated == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add requirements.txt
+          git commit -m "chore(deps): bump yt-dlp to ${{ steps.check_version.outputs.version }}"
+          git push origin main
